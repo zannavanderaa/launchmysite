@@ -1,0 +1,13 @@
+{
+  "name": "beyourownceo",
+  "owner": {
+    "name": "BeYourOwnCEO"
+  },
+  "plugins": [
+    {
+      "name": "launchmysite",
+      "source": "./plugins/launchmysite",
+      "description": "Say \"launch my site\" and Claude walks you step by step through putting your own website online at your own domain."
+    }
+  ]
+}

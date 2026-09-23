@@ -1,0 +1,5 @@
+# Netlify reads this file. The website itself lives in the "site" folder;
+# everything outside it (notes for Claude, settings) is never published.
+[build]
+  publish = "site"
+  command = ""

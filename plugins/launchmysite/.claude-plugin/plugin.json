@@ -1,0 +1,8 @@
+{
+  "name": "launchmysite",
+  "description": "Guides a non-technical person, one calm step at a time, through putting their own website online: a new domain at Porkbun, the website stored safely on GitHub, hosted on Netlify, with a preview-then-go-live routine for every later change.",
+  "version": "0.1.0",
+  "author": {
+    "name": "BeYourOwnCEO"
+  }
+}

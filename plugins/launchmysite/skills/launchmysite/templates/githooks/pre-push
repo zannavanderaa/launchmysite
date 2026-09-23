@@ -1,0 +1,23 @@
+#!/bin/sh
+# launchmysite: refuse any direct push to main.
+#
+# Changes to this website go live only after the owner has seen a preview and said yes.
+# So work happens on a branch, a pull request builds a free Netlify preview, and main
+# changes only through `gh pr merge` on GitHub, which is not a push and is not blocked here.
+#
+# Git runs this before every push and passes one line per ref on stdin:
+#   <local ref> <local sha> <remote ref> <remote sha>
+
+while read local_ref local_sha remote_ref remote_sha
+do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "" >&2
+    echo "launchmysite: blocked a direct push to main." >&2
+    echo "Push a branch instead, open a pull request, show the owner the preview," >&2
+    echo "and only after a clear yes run: gh pr merge <number> --squash --delete-branch" >&2
+    echo "" >&2
+    exit 1
+  fi
+done
+
+exit 0

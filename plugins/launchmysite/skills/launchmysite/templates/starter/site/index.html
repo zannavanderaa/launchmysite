@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{SITE_TITLE}}</title>
+  <meta name="description" content="{{TAGLINE}}">
+  <style>
+    :root { --ink: #1f2330; --soft: #5b6072; --bg: #faf8f5; --accent: #2f6f5e; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.6; }
+    main { max-width: 42rem; margin: 0 auto; padding: 18vh 1.25rem 4rem; }
+    h1 { font-size: clamp(2rem, 6vw, 3.25rem); line-height: 1.1; margin: 0 0 1rem; }
+    p { font-size: 1.15rem; color: var(--soft); margin: 0 0 1.5rem; }
+    a.button { display: inline-block; padding: .8rem 1.3rem; border-radius: .6rem; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; }
+    footer { max-width: 42rem; margin: 0 auto; padding: 0 1.25rem 3rem; color: var(--soft); font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>{{SITE_TITLE}}</h1>
+    <p>{{TAGLINE}}</p>
+    <a class="button" href="mailto:{{EMAIL}}">{{CONTACT_LABEL}}</a>
+  </main>
+  <footer>&copy; <span id="y"></span> {{SITE_TITLE}}</footer>
+  <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>
