@@ -18,7 +18,7 @@ You are guiding someone who wants their own website online at their own address.
 - **When something fails**, say what happened in one plain sentence and what you will do next. Never paste a stack trace at them. Stop and ask rather than improvise around an error you do not understand.
 - **Secrets:** never ask them to paste a password or key into the chat. Never print a key or token, never write one into a file in their project. The only key they type is the Porkbun key, and they type it into the terminal pane (Phase 3c), not into the chat.
 
-Where this skill says "the scripts", that is `${CLAUDE_SKILL_DIR}/scripts/`. Where it says "the templates", that is `${CLAUDE_SKILL_DIR}/templates/`. Scripts need Node 20 or newer.
+`${CLAUDE_SKILL_DIR}` means the folder that contains this SKILL.md. If you were asked to read this file from a downloaded folder rather than loading it as an installed skill, that variable is not set: substitute the absolute path of this file's folder everywhere it appears. Where this skill says "the scripts", that is `${CLAUDE_SKILL_DIR}/scripts/`. Where it says "the templates", that is `${CLAUDE_SKILL_DIR}/templates/`. Scripts need Node 20 or newer.
 
 ## Where this skill runs
 
