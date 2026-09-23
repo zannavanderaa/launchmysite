@@ -13,9 +13,9 @@ The person does only what only a human can do. Claude does the rest.
 | 0. Tools | Clicks Yes on Windows install prompts; on Mac types their password for Homebrew; restarts the app once | Checks and installs Git, GitHub CLI, Node.js LTS, Netlify CLI (winget on Windows, Homebrew on Mac) |
 | 1. Accounts | Creates free GitHub, Netlify and Porkbun accounts | Explains what each one is for |
 | 2. Domain | Buys a new domain at Porkbun and pays | Explains what to pick and what to decline |
-| 3. Logins | `gh auth login` and `netlify login` in the terminal pane, clicks Authorize; creates a Porkbun API key and switches API Access on for the domain | Explains exactly what each permission allows and does not allow |
-| 4. Build | Approves the first version of the site locally; pastes one line in the terminal pane and types the Porkbun keys there | Creates the site from a starter, an HTML design or a picture/PDF design; private GitHub repo; Netlify site linked to it; custom domain; Porkbun DNS (bare domain ALIAS, www CNAME); waits for DNS and HTTPS |
-| 5. Handover | Deletes the Porkbun key | Writes the site's `CLAUDE.md` and pre-push hook, explains credits once, hands over a "what you own and where it lives" summary |
+| 3. Logins | `gh auth login` in the terminal pane, Authorize for GitHub and Netlify; sets the Porkbun spend limit; creates a Porkbun API key and switches API Access on for the domain | Explains exactly what each permission allows and does not allow |
+| 4. Build | Approves the first version locally and goes through the "make it real" list; deletes the Porkbun key straight after DNS is set; pastes one line in the terminal pane and types the Porkbun keys there | Creates the site from a starter, an HTML design or a picture/PDF design; private GitHub repo; Netlify site linked to it; custom domain; Porkbun DNS (bare domain ALIAS, www CNAME); waits for DNS and HTTPS |
+| 5. Handover | (Porkbun key already deleted in Phase 4) | Writes the site's `CLAUDE.md` and pre-push hook, explains credits once, hands over a "what you own and where it lives" summary |
 
 Every later change: Claude works on a branch, opens a pull request, Netlify builds a free deploy preview, Claude says "Here is how it will look: <link>. Shall I put this live?" and merges only on yes. The person never hears "PR" or "merge".
 
@@ -70,22 +70,27 @@ The skill starts at the first moment Claude can talk to the person. Everything b
 
 ## What was tested, and what was not
 
-Tested on this machine (Windows 11, Git for Windows 2.53, bun 1.3 standing in for Node, which is not installed here):
+**Live test, 2026-09-23, on Zanna's Windows 11 laptop and accounts** (Node 24.19 LTS via winget, netlify-cli 27.8.1, gh 2.92). Throwaway GitHub repo `zannavanderaa/launchmysite-test` (private) and Netlify site `launchmysite-test` (id `cc1659ae-1dd4-4183-bdf9-f168bdaafdf3`), both left in place for Zanna to delete.
 
-- All four scripts parse. Their argument and not-logged-in error paths behave as written.
-- `check-site.mjs` against a real Netlify site (`beyourownceo.ai`): DNS at Google and Cloudflare, HTTPS 200 on the bare domain and 301 on www, reported live. Against `example.com`: reported not live.
-- The pre-push hook, against a local bare remote: blocks `git push origin main`, `git push --dry-run origin HEAD:main` and `git push origin change/x:main`; allows pushing a branch. Also blocks correctly when the hook file has Windows line endings.
+- **One authorisation per service.** `netlify login` run from Claude's own shell opened the browser by itself and completed after one Authorize click. `netlify.mjs setup` then created the site, added a read-only deploy key (`read_only: true`) and a webhook (`push`, `pull_request`, `delete`) on the repo, and linked it, reusing the existing `gh` login. No second browser round trip.
+- **Linking triggers a production build by itself.** The explicit `build` call made a second, unnecessary production deploy (15 credits). SKILL.md now waits for the automatic build instead.
+- **Only `site/` is published:** `https://launchmysite-test.netlify.app/CLAUDE.md` returns 404.
+- **Deploy preview:** a pull request got a deploy preview within about a minute; `netlify.mjs preview --pr 1` found `https://deploy-preview-1--launchmysite-test.netlify.app`, which showed the change while production did not. No preview link appeared on the GitHub PR (no checks, no statuses, no comments), as designed, because `--commit-status` is off.
+- **Pre-push hook against GitHub:** `git push origin main` was refused by the hook; `main` on GitHub stayed at the previous commit.
+- **Go-live routine:** `gh pr merge 1 --squash --delete-branch` merged, deleted the remote branch, and produced exactly one new production deploy (count went from 2 to 3), after which production showed the change.
+
+Also tested locally: all scripts parse; `check-site.mjs` reports `beyourownceo.ai` live and `example.com` not live; the hook blocks `push origin main`, `push --dry-run origin HEAD:main` and `push origin other:main`, allows branch pushes, and still works with Windows line endings.
 
 Not tested:
 
-- **The live GitHub and Netlify test did not run.** The Netlify CLI and Node.js are not installed on this machine and Netlify has never been logged in here, which needs Zanna's browser click. See the session report for exactly what to click.
-- `netlify.mjs setup`, `build`, `domain`, `tls`, `preview`, `count` against the real Netlify API.
-- Whether the webhook-based link (no Netlify GitHub App) gives deploy previews for pull requests in practice. The Netlify CLI source says it subscribes to `pull_request`, and the setup is identical to what `netlify init` creates.
-- `porkbun-dns.mjs` against a real Porkbun domain, including how Porkbun's default parking records appear through the API and whether deleting them by id works.
-- Fresh Windows and fresh Mac machines: the winget and Homebrew installs, the UAC prompts, the restart-to-refresh-PATH step, `npm install -g netlify-cli` under PowerShell's execution policy.
-- `gh auth login --web` and `netlify login` typed into the desktop app's terminal pane.
-- Anything on a Mac at all.
+- `porkbun-dns.mjs` against a real Porkbun domain, including how Porkbun's default parking records appear through the API, and the Porkbun spend-limit page (whether it accepts 0).
+- `netlify.mjs domain`, `tls` on a real custom domain; `check-site.mjs` on a brand-new domain.
+- Netlify Forms (form detection click, notification email).
+- Fresh machines: UAC prompts, the restart-to-refresh-PATH step, `npm install -g` under PowerShell's execution policy, Git missing on Windows (PowerShell tool only).
+- `gh auth login --web` typed into the desktop app's terminal pane (gh was already logged in here).
+- Anything on a Mac.
 - A real domain purchase at Porkbun and what the checkout offers today.
+- Zanna's Netlify team is on the Pro plan, not Free, so the Free-plan pause behaviour was not observed.
 
 ## Design choices worth knowing
 
@@ -97,7 +102,7 @@ Not tested:
 
 ## Claims in SKILL.md that could not be fully verified
 
-- **Porkbun key, the honest version.** Zanna's example wording ("It cannot spend money, buy domains") is **not true** and was not used. Per the Porkbun API spec (v3.39, checked 2026-09-23), an API key can register domains from prepaid account credit, and `POST /account/topup` charges the saved card (capped by the account's monthly spend limit, or 100 dollars a month when none is set, emailed each time). A per-key domain allowlist exists (gear icon next to the key) but does not cover account-level endpoints like top-up. SKILL.md says this plainly and has the person delete the key afterwards.
+- **Porkbun key, the honest version.** Zanna's example wording ("It cannot spend money, buy domains") is **not true** and was not used. Per the Porkbun API spec (v3.39, checked 2026-09-23), an API key can register domains from prepaid account credit, and `POST /account/topup` charges the saved card (capped by the account's monthly spend limit, or 100 dollars a month when none is set, emailed each time). A per-key domain allowlist exists (gear icon next to the key) but does not cover account-level endpoints like top-up. SKILL.md says this plainly, has the person set the account's API spend limit as low as it goes before creating the key, and makes deleting the key a fixed step straight after the two DNS records are set and read back. The Porkbun docs describe the monthly spend limit (caps API domain purchases and card top-ups) but do not say whether 0 is accepted or exactly where on the website it is set; the skill says "the lowest amount the page accepts".
 - **Netlify login scope.** Netlify's docs describe how to revoke the CLI (User settings, Applications, Authorized applications) but I found no page stating what the CLI's OAuth token can and cannot do. SKILL.md says honestly that it is broad, roughly what they can do in the dashboard, and only claims that it does not reveal their password.
 - **GitHub login scope.** `repo`, `read:org`, `gist` are gh's documented minimum; `workflow` also appeared on this machine. `repo` is full access to public and private repositories including webhooks; deletion needs `delete_repo`, which gh does not request (checked: GitHub OAuth scopes docs). The revoke path "Settings, Applications" is from general knowledge, not re-read.
 - **Porkbun checkout.** That checkout pushes no pre-selected extras comes from third-party reviews, not from Porkbun. WHOIS privacy free and on by default is from Porkbun's own API docs.

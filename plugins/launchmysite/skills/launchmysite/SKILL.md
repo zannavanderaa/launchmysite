@@ -86,6 +86,8 @@ $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Env
 
 If npm refuses to run because of the PowerShell execution policy, use `npm.cmd install -g netlify-cli` instead. Do not change the execution policy.
 
+If you have the Bash tool (Git Bash) before the restart, put the new tools on PATH for each command with `export PATH="/c/Program Files/nodejs:/c/Users/<user>/AppData/Roaming/npm:$PATH"`. Write the npm folder as a `/c/...` path; `$APPDATA/npm` expands to a Windows path that Git Bash mangles, and `netlify` then fails with "Cannot find module" (seen in testing).
+
 **Mac:**
 - Git: run `git --version`. If macOS shows a box offering to install "command line developer tools", tell them: "This is Apple's own free toolkit that includes Git. Please click Install and wait until it says it is done." Then check again.
 - Homebrew (only if `brew` is missing): Homebrew is a free, widely used installer for Mac tools. Its installer needs their Mac password, which you cannot and should not see, so they run it in the terminal pane. Give them exactly this line from https://brew.sh (re-read it there if in doubt, it can change):
@@ -155,7 +157,7 @@ Tell them: "It will show a short code and ask you to press Enter. Your browser o
 
 Say: "Now the same for Netlify. What this lets me do: manage your Netlify account from this computer: create your website there, connect it to GitHub, give it your address, and check how it is doing. Honestly, this login is broad: it can do most things you can do in your Netlify dashboard, and I will only use it for your website. What it does not do: it does not give me your Netlify password. You can take it back at any time in Netlify, User settings, Applications, Authorized applications, Netlify CLI."
 
-In the terminal pane they paste `netlify login`, click Authorize in the browser, and tell you when it is done. Check with `node "${CLAUDE_SKILL_DIR}/scripts/netlify.mjs" whoami`. If they have more than one team, ask which one to use (the slug goes to `--team` in Phase 4).
+Run `netlify login` yourself: it opens their browser on its own and waits (tested on Windows from Claude's own shell, 2026-09-23). Tell them: "Your browser now shows Netlify asking whether to authorize the Netlify CLI. Please click Authorize." If no browser opens, give them the same command for the terminal pane instead. Check with `node "${CLAUDE_SKILL_DIR}/scripts/netlify.mjs" whoami`. If they have more than one team, ask which one to use (the slug goes to `--team` in Phase 4).
 
 ### 3c. The Porkbun key (used once, deleted straight after)
 

@@ -49,7 +49,7 @@ They do not need the vocabulary of developers. Unless they ask, never say "pull 
    `curl -s -o /dev/null -w "%{http_code}" <address>` (on Windows PowerShell use `curl.exe`) until it says 200.
 7. Show it and ask, in their language, in these words or very close:
    "Here is how it will look: <address>. Shall I put this live?"
-8. Only after a clear yes: `gh pr merge <number> --squash --delete-branch`, then `git switch main` and `git pull --ff-only`.
+8. Only after a clear yes: `gh pr merge <number> --squash --delete-branch`, then `git switch main`, `git pull --ff-only` and `git fetch --prune`.
    Wait a minute, check that https://{{DOMAIN}} shows the change, and tell them it is live.
 9. If they want something different: change it on the same draft, commit and push again. The preview updates itself at the same address, and previews are free.
 10. If they say no altogether: leave the draft alone and say it is kept aside, nothing went live.
@@ -63,7 +63,7 @@ If `git config core.hooksPath` does not print `.githooks` (for example on a new 
 
 ## Going live costs credits: batch the changes
 
-The website runs on Netlify's Free plan. That plan has 300 credits a month. Every time a change goes live it costs 15 credits, and visitors downloading the website also use credits (20 credits per GB). Previews are free. **When the credits run out on the Free plan, the website is paused until the next month, and on Free there is no way to buy more.**
+The website runs on Netlify's Free plan. That plan has 300 credits a month. Every time a change goes live it costs 15 credits, and visitors also use credits (20 credits per GB downloaded, 2 credits per 10,000 page requests). Previews are free, and so are Netlify Forms submissions. **When the credits run out on the Free plan, the website is paused until the next month, and on Free there is no way to buy more.**
 
 So:
 - Any go-live costs the same 15 credits, even one that only changes this CLAUDE.md or other files outside `site/`. Never put such a notes-only change live on its own; include it in the next draft that changes the website.
