@@ -44,10 +44,10 @@ Scripts are plain Node (20+), no dependencies. They never print, log or write a 
 
 The target user runs the **Claude desktop app, Code tab, Local session**, Pro plan, on Windows or Mac.
 
-**Route A, plugin marketplace (needs this repo public on GitHub first, Zanna's decision).** In the Claude Code CLI, or typed into the desktop prompt box if the desktop app accepts it:
+**Route A, plugin marketplace.** In the Claude Code CLI, or typed into the desktop prompt box if the desktop app accepts it:
 
 ```
-/plugin marketplace add <github-owner>/launchmysite
+/plugin marketplace add zannavanderaa/launchmysite
 /plugin install launchmysite@beyourownceo
 ```
 
@@ -70,7 +70,7 @@ The skill starts at the first moment Claude can talk to the person. Everything b
 
 ## What was tested, and what was not
 
-**Live test, 2026-09-23, on Zanna's Windows 11 laptop and accounts** (Node 24.19 LTS via winget, netlify-cli 27.8.1, gh 2.92). Throwaway GitHub repo `zannavanderaa/launchmysite-test` (private) and Netlify site `launchmysite-test` (id `cc1659ae-1dd4-4183-bdf9-f168bdaafdf3`), both left in place for Zanna to delete.
+**Live test, 2026-09-23, on a Windows 11 laptop with real GitHub and Netlify accounts** (Node 24.19 LTS via winget, netlify-cli 27.8.1, gh 2.92), using a throwaway private repo and Netlify site called `launchmysite-test`.
 
 - **One authorisation per service.** `netlify login` run from Claude's own shell opened the browser by itself and completed after one Authorize click. `netlify.mjs setup` then created the site, added a read-only deploy key (`read_only: true`) and a webhook (`push`, `pull_request`, `delete`) on the repo, and linked it, reusing the existing `gh` login. No second browser round trip.
 - **Linking triggers a production build by itself.** The explicit `build` call made a second, unnecessary production deploy (15 credits). SKILL.md now waits for the automatic build instead.
@@ -90,7 +90,7 @@ Not tested:
 - `gh auth login --web` typed into the desktop app's terminal pane (gh was already logged in here).
 - Anything on a Mac.
 - A real domain purchase at Porkbun and what the checkout offers today.
-- Zanna's Netlify team is on the Pro plan, not Free, so the Free-plan pause behaviour was not observed.
+- The test Netlify team was on the Pro plan, not Free, so the Free-plan pause behaviour was not observed.
 
 ## Design choices worth knowing
 
@@ -102,11 +102,11 @@ Not tested:
 
 ## Claims in SKILL.md that could not be fully verified
 
-- **Porkbun key, the honest version.** Zanna's example wording ("It cannot spend money, buy domains") is **not true** and was not used. Per the Porkbun API spec (v3.39, checked 2026-09-23), an API key can register domains from prepaid account credit, and `POST /account/topup` charges the saved card (capped by the account's monthly spend limit, or 100 dollars a month when none is set, emailed each time). A per-key domain allowlist exists (gear icon next to the key) but does not cover account-level endpoints like top-up. SKILL.md says this plainly, has the person set the account's API spend limit as low as it goes before creating the key, and makes deleting the key a fixed step straight after the two DNS records are set and read back. The Porkbun docs describe the monthly spend limit (caps API domain purchases and card top-ups) but do not say whether 0 is accepted or exactly where on the website it is set; the skill says "the lowest amount the page accepts".
+- **Porkbun key, the honest version.** A key that "cannot spend money" would be the reassuring thing to say, and it is **not true**. Per the Porkbun API spec (v3.39, checked 2026-09-23), an API key can register domains from prepaid account credit, and `POST /account/topup` charges the saved card (capped by the account's monthly spend limit, or 100 dollars a month when none is set, emailed each time). A per-key domain allowlist exists (gear icon next to the key) but does not cover account-level endpoints like top-up. SKILL.md says this plainly, has the person set the account's API spend limit as low as it goes before creating the key, and makes deleting the key a fixed step straight after the two DNS records are set and read back. The Porkbun docs describe the monthly spend limit (caps API domain purchases and card top-ups) but do not say whether 0 is accepted or exactly where on the website it is set; the skill says "the lowest amount the page accepts".
 - **Netlify login scope.** Netlify's docs describe how to revoke the CLI (User settings, Applications, Authorized applications) but I found no page stating what the CLI's OAuth token can and cannot do. SKILL.md says honestly that it is broad, roughly what they can do in the dashboard, and only claims that it does not reveal their password.
 - **GitHub login scope.** `repo`, `read:org`, `gist` are gh's documented minimum; `workflow` also appeared on this machine. `repo` is full access to public and private repositories including webhooks; deletion needs `delete_repo`, which gh does not request (checked: GitHub OAuth scopes docs). The revoke path "Settings, Applications" is from general knowledge, not re-read.
 - **Porkbun checkout.** That checkout pushes no pre-selected extras comes from third-party reviews, not from Porkbun. WHOIS privacy free and on by default is from Porkbun's own API docs.
 - **Porkbun default parking records.** That new domains carry parking records on the bare domain and www, and that they can be deleted through `/dns/delete`, is from memory. The script prints a NOTE for unrecognised record types and verifies the result by reading it back.
 - **Desktop app restart for PATH.** That the desktop app only picks up newly installed tools after a full restart is inferred from the docs ("On Windows, the app inherits user and system environment variables"; "PATH updates only apply to new terminal sessions"), not tested.
 - **`gh auth login` prompt wording** ("press Enter", "authenticate Git") is from memory of gh's interactive flow.
-- **Netlify Free plan numbers** (300 credits, 15 per production deploy, previews free, 20 credits per GB, site pauses when out) come from the brief, which says they were checked on netlify.com the same day. I did not re-check them.
+- **Netlify Free plan numbers** (300 credits, 15 per production deploy, previews free, 20 credits per GB, site pauses when out) were checked on netlify.com/pricing and the Netlify billing docs on 2026-09-23.
