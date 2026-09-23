@@ -157,25 +157,26 @@ Say: "Now the same for Netlify. What this lets me do: manage your Netlify accoun
 
 In the terminal pane they paste `netlify login`, click Authorize in the browser, and tell you when it is done. Check with `node "${CLAUDE_SKILL_DIR}/scripts/netlify.mjs" whoami`. If they have more than one team, ask which one to use (the slug goes to `--team` in Phase 4).
 
-### 3c. The Porkbun key (used once, then deleted)
+### 3c. The Porkbun key (used once, deleted straight after)
 
-Say: "The last permission is for your domain. This key is like a spare key you give me for one job only: setting the address signposts for your domain, so that visitors who type your address arrive at your website. I will use it for exactly two signposts, one for your address and one for www in front of it, and nothing else. Honest detail: Porkbun keys are not limited to signposts. Even when we restrict it to your one domain, a Porkbun key could technically also buy things using credit on your Porkbun account, or top that credit up from a saved card (Porkbun limits that to 100 dollars a month by default and emails you each time). I will not do any of that, and to take the question away completely, you delete the key as soon as your site is live. It never gets saved in your website's files."
+Say: "The last permission is for your domain. This key is like a spare key you give me for one job only: setting the address signposts for your domain, so that visitors who type your address arrive at your website. I will use it for exactly two signposts, one for your address and one for www in front of it, and nothing else. Honest detail: Porkbun keys are not limited to signposts. Even when we restrict it to your one domain, a Porkbun key could technically also buy things using credit on your Porkbun account, or top that credit up from a saved card (Porkbun limits that to 100 dollars a month by default and emails you each time). I will not do any of that. To take the question away completely, we first set Porkbun's spending limit for keys as low as it goes, and the moment the two signposts are set and I have checked them, you delete the key, before we do anything else. It never gets saved in your website's files."
 
 (Checked 2026-09-23 against https://porkbun.com/api/json/v3/spec: keys can register domains from prepaid credit, and `POST /account/topup` charges the saved payment method, capped by the monthly spend limit or 100 dollars a month if none is set. A key can be restricted per key to specific domains and IP addresses. The domain restriction does not cover account-level endpoints like top-up.)
 
 Steps for them, one at a time:
-1. On porkbun.com: Account (top right), API Access. Type a name, for example "Claude website setup", and click Create API Key.
-2. "Porkbun shows two codes now: the API key and the secret key. The secret is shown only once. Keep this page open for a minute; you will paste both into the terminal in a moment. Do not paste them into this chat."
-3. Next to the new key, click the gear icon and, under the domain restriction, enter only their domain. (If they cannot find this option, that is fine; the key still works, and they will delete it afterwards anyway.)
-4. Account, Domain Management, find their domain, Details, and switch **API Access** on. "This tells Porkbun that keys are allowed to touch this particular domain at all. Without it, Porkbun says no, which is a good default."
+1. **Spending limit first, before the key exists.** On porkbun.com: Account (top right), API Access (the API settings page, where Porkbun shows its Top-Up Settings). Ask them to: make sure **Auto Top-Up is off**, and if there is a **monthly spend limit** field, set it to the lowest amount the page accepts (0 if it allows 0). Say why: "This caps what any key on your account is allowed to spend. We will never need it to spend anything." If the page will not accept 0 or they cannot find the field, that is fine: the key lives only for a few minutes, and Porkbun emails every card charge. (Porkbun's API docs, checked 2026-09-23, describe a per-account monthly spend limit that caps domain purchases and card top-ups, and a 100 dollar a month top-up ceiling when none is set. They do not say whether 0 is accepted, and a card can only be charged if one is saved on the account.)
+2. Same page: type a name for a new key, for example "Claude website setup", and click Create API Key.
+3. "Porkbun shows two codes now: the API key and the secret key. The secret is shown only once. Keep this page open; you will paste both into the terminal in a moment. Do not paste them into this chat."
+4. Next to the new key, click the gear icon and, under the domain restriction, enter only their domain. (If they cannot find this option, that is fine; the key lives for a few minutes only.)
+5. Account, Domain Management, find their domain, Details, and switch **API Access** on. "This tells Porkbun that keys are allowed to touch this particular domain at all. Without it, Porkbun says no, which is a good default."
 
-Do not ask for the key yet. It is used in Phase 4, step 7.
+Do not ask for the key yet. It is used in Phase 4, step 8, and deleted in step 9, straight after.
 
 ---
 
 ## Phase 4: you build everything (tell them what is happening as you go)
 
-Tell them: "Now it is my turn. This takes a few minutes. I will tell you what I am doing, and I will ask you for one paste in the terminal along the way."
+Tell them: "Now it is my turn. This takes a few minutes. I will tell you what I am doing, and I will ask you for one paste in the terminal and a couple of clicks along the way."
 
 Choose names once: `site-name` = the domain with dots replaced by hyphens, lowercase (for example `bakkerijanna-nl`). The GitHub repository gets the same name. Project folder: `~/Websites/<site-name>` (on Windows `%USERPROFILE%\Websites\<site-name>`; do not put it in OneDrive or iCloud Drive, sync tools and Git do not mix well).
 
@@ -188,34 +189,48 @@ Choose names once: `site-name` = the domain with dots replaced by hyphens, lower
    - Copy `templates/githooks/pre-push` to `<project>/.githooks/pre-push`.
    - Copy `templates/site-CLAUDE.md` to `<project>/CLAUDE.md` and fill every `{{...}}` placeholder (`{{OWNER_NAME}}` = the name they gave you, `{{SETUP_DATE}}` = today, `{{DOMAIN}}`, `{{NETLIFY_SITE}}` = site-name, `{{GITHUB_REPO}}` = `<github-user>/<site-name>`, the user from `gh api user --jq .login`). Check that no `{{` is left. It must be complete now: any later change to it costs a go-live.
 
-2. **First saved version.** In the project folder:
+2. **Make it real, before anything goes online.** A design or mockup often contains things that only look like they work. Check `site/` yourself, then go through each finding with them in plain words, one at a time, and fix or remove it together. Nothing goes online until this list is empty or they have consciously chosen to keep something. Look for:
+   - **Forms** that send nowhere: no `action`, `action="#"`, an example or placeholder address, or a script that does nothing with the answers. Explain the options simply and let them choose:
+     - *An email link instead of a form* (a "Mail me" button opens the visitor's own email program). Simplest, nothing to set up, nothing stored.
+     - *Netlify Forms*: the form stays, each message is collected in their Netlify account and can be emailed to them. On Netlify's current credit plans, including Free, form submissions cost no credits (checked 2026-09-23, docs.netlify.com, "How credits work"). It needs one click from them in Netlify (the site's Forms page, Enable form detection) plus an email notification set up there, and it starts working from the first go-live after that click. You add `name="contact" method="POST" data-netlify="true"` to the form.
+     - *Remove the form.*
+   - **Links that go nowhere**: `href="#"`, `href=""`, `javascript:void(0)`, or links to pages that do not exist in `site/`. Ask where each should go, or remove it.
+   - **Placeholder text**: lorem ipsum, "[your text here]", "Company name", example phone numbers or addresses. Placeholder reviews, testimonials or quotes must never go online as if they were real; ask for real ones or remove them.
+   - **Dummy images**: placeholder image services (for example placehold.co, via.placeholder.com, picsum.photos), grey boxes, stock photos they did not choose. Ask for their own, or agree on a free image they are comfortable with.
+   - **Pages that exist only in the design**: menu items or buttons for pages (About, Shop, Blog) that are not built. Build them from what they tell you, or remove the menu item.
+   - **Other leftovers**: the mockup maker's name or copyright line, analytics or chat snippets from someone else's account, links to the designer's own site.
+   When the list is done, tell them: "Everything on the page now does what it looks like it does."
+
+3. **First saved version.** In the project folder:
    `git init -b main`, `git add -A`, `git update-index --chmod=+x .githooks/pre-push`, `git commit -m "First version of the website"`.
    (If git asks for a name and email, set them for this project only with `git config user.name` / `git config user.email`, using their name and the email they signed up to GitHub with. Ask first.)
 
-3. **Private safe copy on GitHub.** Say: "I am now putting a private copy of your website on GitHub." Run:
+4. **Private safe copy on GitHub.** Say: "I am now putting a private copy of your website on GitHub." Run:
    `gh repo create <site-name> --private --source . --remote origin --push`
    Straight after, switch the hook on: `git config core.hooksPath .githooks` (Mac also: `chmod +x .githooks/pre-push`). From here on nothing reaches `main` except through the preview routine.
 
-4. **Netlify hosting, connected to GitHub.** Say: "Now I am creating your website at Netlify and connecting it to the copy on GitHub, so every change I prepare gets a free preview first." Run from the project folder:
+5. **Netlify hosting, connected to GitHub.** Say: "Now I am creating your website at Netlify and connecting it to the copy on GitHub, so every change I prepare gets a free preview first." Run from the project folder:
    `node "${CLAUDE_SKILL_DIR}/scripts/netlify.mjs" setup --repo <github-user>/<site-name> --name <site-name> [--team <slug>]`
-   This does what `netlify init` does for GitHub (a read-only deploy key and a webhook on the repository, and the link on the Netlify site), without its interactive questions and without a second browser authorisation. It writes `.netlify/state.json` (ignored by Git). If the name is taken, add a short suffix, try again, and update `{{NETLIFY_SITE}}` values in `CLAUDE.md` in the first draft later.
+   This does what `netlify init` does for GitHub (a read-only deploy key and a webhook on the repository, and the link on the Netlify site), without its interactive questions and without a second browser authorisation. It writes `.netlify/state.json` (ignored by Git). If the name is taken, add a short suffix, try again, and correct the site name in `CLAUDE.md` in the first later change.
    Tell them what this connection allows: "Netlify now has read-only access to this one website's copy on GitHub, so it can build it. It cannot change anything there."
 
-5. **First build.** `node "${CLAUDE_SKILL_DIR}/scripts/netlify.mjs" build`, wait a minute, then `... netlify.mjs status`. Open `https://<site-name>.netlify.app` with curl and check for HTTP 200. Tell them: "Your website is already online at a temporary Netlify address: https://<site-name>.netlify.app. Next we give it your own address."
+6. **First build (automatic).** Linking the repository makes Netlify build and publish the site by itself: this is the first go-live, 15 credits. **Do not start another build.** Wait about a minute, then run `node "${CLAUDE_SKILL_DIR}/scripts/netlify.mjs" status` until the newest `production` deploy is `ready`. Only if no production deploy has appeared after 3 minutes, run `netlify.mjs build` once. Check that `https://<site-name>.netlify.app` returns HTTP 200. Tell them: "Your website is already online at a temporary Netlify address: https://<site-name>.netlify.app. Next we give it your own address."
+   If they chose Netlify Forms in step 2: walk them now to the site in Netlify, Forms, Enable form detection, and set up an email notification. Tell them the form starts working with the next go-live; you will include it in their first change, or, if they want it working today, you can put the same version live once more (another 15 credits, their choice).
 
-6. **Give Netlify the address.** `node "${CLAUDE_SKILL_DIR}/scripts/netlify.mjs" domain --domain <domain>`. Netlify then serves both the address and www.
+7. **Give Netlify the address.** `node "${CLAUDE_SKILL_DIR}/scripts/netlify.mjs" domain --domain <domain>`. Netlify then serves both the address and www.
 
-7. **Set the signposts at Porkbun.** Explain: "Now the two signposts at Porkbun. I have prepared one line for the terminal. When you paste it and press Enter, it asks for your two Porkbun codes; paste each one and press Enter. You will not see them appear, that is on purpose. The codes stay in the terminal for these few seconds and are not saved anywhere."
+8. **Set the signposts at Porkbun.** Explain: "Now the two signposts at Porkbun. I have prepared one line for the terminal. When you paste it and press Enter, it asks for your two Porkbun codes; paste each one and press Enter. You will not see them appear, that is on purpose. The codes stay in the terminal for these few seconds and are not saved anywhere."
    The line:
    `node "<absolute path of the skill>/scripts/porkbun-dns.mjs" --domain <domain> --netlify-site <site-name>`
    (Write out the absolute path; the terminal pane does not know `${CLAUDE_SKILL_DIR}`. Quote it, it may contain spaces.)
-   Ask them to tell you when it prints "Done", or to copy what it printed if it says ERROR (the output never contains the keys). The script changes only the bare domain and www: it removes Porkbun's default parking records there and sets an ALIAS to `apex-loadbalancer.netlify.com` and a CNAME to `<site-name>.netlify.app`, which is what Netlify's documentation asks for. Mail, TXT and all other names are never touched. If it prints a NOTE or WARNING, read it and explain before going on.
+   Ask them to tell you when it prints "Done", or to copy what it printed if it says ERROR (the output never contains the keys). The script changes only the bare domain and www: it removes Porkbun's default parking records there, sets an ALIAS to `apex-loadbalancer.netlify.com` and a CNAME to `<site-name>.netlify.app` (what Netlify's documentation asks for), then reads the records back from Porkbun and only says "Done" if they are exactly right. Mail, TXT and all other names are never touched. If it prints a NOTE or WARNING, read it and explain before going on.
 
-8. **Wait for the internet to catch up, then HTTPS.** Say: "The internet now needs a little time to learn your new address. Often it is minutes, sometimes a few hours. I will keep checking." Run:
+9. **Delete the Porkbun key, now. This step is fixed, not advice, and nothing else happens before it.** As soon as the script says "Done" (records set and read back), say: "The signposts are set and checked. The key has done its only job, so let us delete it right now, before we wait for your address to work." Walk them through it: porkbun.com, Account, API Access, find "Claude website setup", delete it, confirm. Then ask: "Is it gone from the list?" and wait for a clear yes. If they are unsure, ask them to describe what the API Access page shows now. Do not continue with step 10 until they have confirmed the key is gone. If the signposts ever need changing later, they create a new key for that one job and delete it again straight after.
+
+10. **Wait for the internet to catch up, then HTTPS.** Say: "The internet now needs a little time to learn your new address. Often it is minutes, sometimes a few hours. I will keep checking." Run:
    `node "${CLAUDE_SKILL_DIR}/scripts/check-site.mjs" --domain <domain> --netlify-site <site-name> --wait 1800`
    While DNS is fine but HTTPS is not, run `netlify.mjs tls`; if Netlify has no certificate 15 minutes after DNS is correct, run `netlify.mjs tls --provision`. If after 30 minutes it is still not live, tell them honestly it can take longer, and that they can close the app and say "launch my site" later; you will pick up from here.
    When `check-site` says `"live": true`, open it in their browser with them: "Your website is live at https://<domain>."
-
 
 ---
 
@@ -224,7 +239,7 @@ Choose names once: `site-name` = the domain with dots replaced by hyphens, lower
 1. Check the backstop without changing anything: `git config core.hooksPath` must print `.githooks`, and `git push --dry-run origin HEAD:main` must fail with "launchmysite: blocked a direct push to main" (Git runs the hook even on a dry run, and a dry run sends nothing). If it does not fail, stop and fix it before going on.
 2. The rules for later are in `<project>/CLAUDE.md`, which went up with the first version. Tell them in one sentence: "I left notes in your website folder so that any future session knows how your website works and that nothing goes live without your yes."
 3. Tell them about going live and credits, once, simply: "Each time we put a change live, Netlify uses 15 of the 300 free credits you get each month; visitors use some too. Previews are free. If the credits ever run out, Netlify pauses the site until the next month, and on the free plan you cannot buy more. So I will collect your changes and put them live together, and I will keep an eye on it."
-4. Tell them: "You can now delete the Porkbun key: on porkbun.com, Account, API Access, delete 'Claude website setup'. Your website keeps working; the key was only needed to set the signposts." Ask them to tell you when it is done, and say thank you.
+4. Remind them, in one sentence, that the Porkbun key was deleted in step 9 of Phase 4, so nothing on this computer can change their domain any more. (If that step was somehow skipped, do it now, before the summary.)
 5. Hand over a short summary in their language, like this:
 
    **What you now own, and where it lives**
@@ -233,7 +248,7 @@ Choose names once: `site-name` = the domain with dots replaced by hyphens, lower
    - **Your hosting:** Netlify, free plan, site `<site-name>`. Also always reachable at https://<site-name>.netlify.app.
    - **Secure connection (the padlock):** included free, renewed automatically by Netlify.
    - **How changes work from now on:** open Claude, start a Local session in the folder `<project folder>`, and tell me what you want changed. I will show you a preview link first and ask "Shall I put this live?". Nothing goes live without your yes.
-   - **Permissions you gave, and how to take them back:** GitHub (Settings, Applications), Netlify (User settings, Applications). The Porkbun key: deleted, or delete it now.
+   - **Permissions you gave, and how to take them back:** GitHub (Settings, Applications), Netlify (User settings, Applications). The Porkbun key: already deleted.
 
 6. Tell them how to come back: "Next time, in the Claude app, start a new Local session and choose the folder `<project folder>`. I will read the notes I left there and know exactly how your website works."
 
@@ -245,5 +260,6 @@ Choose names once: `site-name` = the domain with dots replaced by hyphens, lower
 - Attempt the existing-domain route (v1.1).
 - Make the GitHub repository public, or add branch protection or review rules (on a free private repository they cannot be enforced, and a required-review rule would lock the owner out of their own changes).
 - Change their DNS beyond the bare domain and www, or change the nameservers.
+- Keep a Porkbun key alive past Phase 4 step 9, or let anything go online before the "make it real" check in Phase 4 step 2.
 - Pass `--commit-status` to `netlify.mjs setup` unless they ask for preview notes on GitHub; it hands Netlify a copy of their GitHub login.
 - Print, log, save or paste a token, password or key anywhere.
